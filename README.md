@@ -1,3 +1,11 @@
+<blockquote>
+<div align="center">
+  <h1>Code First, Research Later</h1>
+  <h3><b>It was shortly after spending an afternoon adding activity status support and MusicBrainz integration that I discovered <a href='https://github.com/patryk-ku/mpris-discord-rpc?tab=readme-ov-file#mpris-discord-rpc'>mpris-discord-rpc</a> already existed and did what I wanted.</b></h3>
+  <h4>Oops!</h4>
+</div>
+</blockquote>
+
 # cmus-discord-rpc
 
 ![Rust][github-actions-badge] [![Discord][discord-badge]][discord-invite]
