@@ -1,3 +1,5 @@
+mod album_art;
+
 use std::cell::LazyCell;
 use std::env;
 use std::fmt::{self, Debug, Display, Formatter};
@@ -56,6 +58,8 @@ fn main() {
     let mut output = String::new();
     let file_r = LazyCell::new(|| Regex::new(r"(?m)^file .+/(.+)\..+\n").unwrap());
 
+    let mut last_track: Option<String> = None;
+    let mut last_album_art_url: Option<String> = None;
     loop {
         if stream.write_all(b"status\n").is_err() {
             drpc.clear_activity().expect("Failed to clear presence");
@@ -77,6 +81,7 @@ fn main() {
         let mut ac = Activity::new().details(status.to_string());
         if status != Status::Stopped {
             let artist = get_value(&output, "tag artist");
+            let album = get_value(&output, "tag album");
             let title = get_value(&output, "tag title");
 
             if artist.is_none() || title.is_none() {
@@ -104,8 +109,27 @@ fn main() {
                     .as_secs();
                 ac = ac.timestamps(|t| t.end(sce + duration - position));
             }
+
+            let current_track = match (&artist, &album) {
+                (Some(a), Some(b)) => Some(format!("{a} - {b}")),
+                _ => None,
+            };
+            if current_track != last_track {
+                last_track = current_track.clone();
+                last_album_art_url = if let Some(album) = album {
+                    album_art::fetch_album_art(artist.clone().unwrap(), album)
+                } else {
+                    None
+                };
+            }
         }
 
+        ac = ac.r#type(2);
+        if let Some(url) = &last_album_art_url {
+            ac = ac.assets(|a| a.large_image(url));
+        } else {
+            ac = ac.assets(|a| a.large_image("https://files.catbox.moe/3sv1ix.png"));
+        }
         drpc.set_activity(|_| ac).expect("Failed to set presence");
 
         thread::sleep(Duration::from_secs(15));
